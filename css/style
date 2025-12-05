@@ -792,3 +792,9 @@ body {
   60% { transform: scale(1.05); opacity: 1; }
   100% { transform: scale(1); }
 }
+
+#cta-start {
+  position: relative;
+  z-index: 10;
+  pointer-events: auto !important;
+}
