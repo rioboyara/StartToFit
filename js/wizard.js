@@ -136,6 +136,12 @@ const bindRangeControls = (container) => {
   });
 };
 
+const updateGroupActiveState = (group, targetButton) => {
+  group.querySelectorAll("button").forEach((button) => {
+    button.classList.toggle("active", button === targetButton);
+  });
+};
+
 const bindSelectionCards = (container) => {
   container.querySelectorAll("[data-field]").forEach((group) => {
     if (!group.matches(".selection-cards, .pill-group, .selection-grid")) {
@@ -145,6 +151,7 @@ const bindSelectionCards = (container) => {
     group.querySelectorAll("button").forEach((button) => {
       button.addEventListener("click", () => {
         const value = button.dataset.value;
+        updateGroupActiveState(group, button);
         updateOnboardingField(field, field === "days" ? Number(value) : value);
       });
     });
