@@ -1,0 +1,52 @@
+import { CONFIG } from "./config.js";
+
+export async function fetchTips(profile, selectedExercises) {
+  const prompt = `User profile: ${JSON.stringify(profile)}. Selected exercises: ${selectedExercises.map((ex) => ex.name).join(", ")}. Give 2-3 sentences in Russian explaining why this workout fits them. No AI mentions.`;
+  return callGemini(prompt, "tips");
+}
+
+export async function fetchMotivation(profile) {
+  const prompt = `Пользователь завершил тренировку. Профиль: ${JSON.stringify(profile)}. Дай короткое мотивирующее сообщение на русском, без упоминания ИИ.`;
+  return callGemini(prompt, "motivation");
+}
+
+export async function askTrainer(question, context) {
+  const prompt = `Ты дружелюбный фитнес-тренер. Ответь кратко и по делу на русском. Не упоминай, что ты ИИ. Вопрос: ${question}. Контекст: ${context ? context.data.name : "без контекста"}.`;
+  return callGemini(prompt, "chat");
+}
+
+async function callGemini(prompt, type) {
+  if (!CONFIG.API_KEY || CONFIG.API_KEY === "YOUR_GEMINI_KEY") {
+    return fallbackResponse(type);
+  }
+  try {
+    const response = await fetch(`${CONFIG.API_URL}?key=${CONFIG.API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }]
+          }
+        ]
+      })
+    });
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.map((part) => part.text).join(" ") ?? "";
+    return text || fallbackResponse(type);
+  } catch (error) {
+    console.error("Gemini request failed", error);
+    return fallbackResponse(type);
+  }
+}
+
+function fallbackResponse(type) {
+  if (type === "tips") {
+    return "Эта комбинация упражнений равномерно нагружает основные группы мышц и помогает прогрессировать без перегрузок.";
+  }
+  if (type === "motivation") {
+    return "Отличный фокус и дисциплина! Закрепи успех лёгкой растяжкой и стаканом воды.";
+  }
+  return "Продолжай контролировать технику и не спеши — движение должно быть плавным.";
+}
